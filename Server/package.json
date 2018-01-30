@@ -1,0 +1,18 @@
+{
+  "name": "multiple-chat-rooms",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "aaa",
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "express": "^4.16.2",
+    "nodemon": "^1.14.11",
+    "socket.io": "^2.0.4"
+  }
+}
