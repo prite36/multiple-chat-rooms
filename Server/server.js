@@ -1,6 +1,5 @@
 var express = require('express')
 var app = express()
-var bodyParser = require('body-parser')
 var server = require('http').Server(app)
 var io = require('socket.io')(server)
 app.use(function (req, res, next) {
@@ -8,18 +7,12 @@ app.use(function (req, res, next) {
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
   next()
 })
-app.use(bodyParser.urlencoded({ extended: false }))
-app.use(bodyParser.json())
 app.use(express.static('dist'))
 var usernames = {}
-var countPeople = {
-  room1: 0,
-  room2: 0,
-  room3: 0
-}
+var countPeople = {room1: 0, room2: 0, room3: 0}
 io.sockets.on('connection', socket => {
   io.sockets.emit('updateusers', countPeople)
-  socket.on('connectFirstTime', function (data) {
+  socket.on('connectFirstTime', data => {
     console.log(`User ${data.userName} Connection`)
     socket.username = data.userName
     socket.room = data.room
@@ -30,10 +23,7 @@ io.sockets.on('connection', socket => {
     socket.emit('updatechat', {userName: 'SERVER', data: `you have connected to ${data.room}`})
     socket.broadcast.to(data.room).emit('updatechat', {userName: 'SERVER', data: `${data.userName} has connected to this room`})
   })
-  socket.on('sendchat', function (data) {
-    io.sockets.in(socket.room).emit('updatechat', {userName: socket.username, data: data})
-  })
-  socket.on('switchRoom', function (newroom) {
+  socket.on('switchRoom', newroom => {
     socket.leave(socket.room)
     countPeople[socket.room] --
     socket.join(newroom)
@@ -44,11 +34,12 @@ io.sockets.on('connection', socket => {
     socket.room = newroom
     socket.broadcast.to(newroom).emit('updatechat', {userName: 'SERVER', data: `${socket.username} has joined this room`})
   })
-  socket.on('disconnect', function () {
+  socket.on('sendchat', data => {
+    io.sockets.in(socket.room).emit('updatechat', {userName: socket.username, data: data})
+  })
+  socket.on('disconnect', () => {
     console.log(socket.room)
-    if (socket.room) {
-      countPeople[socket.room] --
-    }
+    if (socket.room) countPeople[socket.room] --
     delete usernames[socket.username]
     io.sockets.emit('updateusers', countPeople)
     socket.broadcast.emit('updatechat', {userName: 'SERVER', data: `${socket.username} has disconnected`})
