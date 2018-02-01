@@ -1,11 +1,14 @@
 <template>
   <div id="app">
+    <div v-for="(data, index) in countPeople" :key="index">
+      {{index}}  {{data}}
+    </div>
     Your Name  <input type="text" name="" v-model="userName">
     <button type="button" name="button" @click="start('room1')">Room1</button>
     <button type="button" name="button" @click="start('room2')">Room2</button>
     <button type="button" name="button" @click="start('room3')">Room3</button>
 
-    <input type="text" name="" v-model="myMessage">
+    <br><input type="text" name="" v-model="myMessage">
     <button type="button" name="button" @click="sendMessage()">send</button>
     <br>
     <div v-for="(chat, index) in allChat" :key="index">
@@ -23,6 +26,7 @@ export default {
       userName: '',
       selectRoom: null,
       allChat: [],
+      countPeople: null,
       myMessage: ''
     }
   },
@@ -31,9 +35,10 @@ export default {
 
     },
     updatechat (data) {
-      console.log(userName)
-      console.log(data)
-      this.allChat.push(`${userName} : ${data}`)
+      this.allChat.push(`${data.userName} : ${data.data}`)
+    },
+    updateusers (data) {
+      this.countPeople = data
     }
   },
   methods: {

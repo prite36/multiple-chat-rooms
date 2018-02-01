@@ -12,13 +12,21 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 app.use(express.static('dist'))
 var usernames = {}
+var countPeople = {
+  room1: 0,
+  room2: 0,
+  room3: 0
+}
 io.sockets.on('connection', socket => {
+  io.sockets.emit('updateusers', countPeople)
   socket.on('connectFirstTime', function (data) {
     console.log(`User ${data.userName} Connection`)
     socket.username = data.userName
     socket.room = data.room
     usernames[data.userName] = data.userName
     socket.join(data.room)
+    countPeople[socket.room] ++
+    io.sockets.emit('updateusers', countPeople)
     socket.emit('updatechat', {userName: 'SERVER', data: `you have connected to ${data.room}`})
     socket.broadcast.to(data.room).emit('updatechat', {userName: 'SERVER', data: `${data.userName} has connected to this room`})
   })
@@ -26,17 +34,23 @@ io.sockets.on('connection', socket => {
     io.sockets.in(socket.room).emit('updatechat', {userName: socket.username, data: data})
   })
   socket.on('switchRoom', function (newroom) {
-    console.log(newroom)
     socket.leave(socket.room)
+    countPeople[socket.room] --
     socket.join(newroom)
+    countPeople[newroom] ++
+    io.sockets.emit('updateusers', countPeople)
     socket.emit('updatechat', {userName: 'SERVER', data: `you have connected to ${newroom}`})
     socket.broadcast.to(socket.room).emit('updatechat', {userName: 'SERVER', data: `${socket.username} has left this room`})
     socket.room = newroom
     socket.broadcast.to(newroom).emit('updatechat', {userName: 'SERVER', data: `${socket.username} has joined this room`})
   })
   socket.on('disconnect', function () {
+    console.log(socket.room)
+    if (socket.room) {
+      countPeople[socket.room] --
+    }
     delete usernames[socket.username]
-    io.sockets.emit('updateusers', usernames)
+    io.sockets.emit('updateusers', countPeople)
     socket.broadcast.emit('updatechat', {userName: 'SERVER', data: `${socket.username} has disconnected`})
     socket.leave(socket.room)
   })
