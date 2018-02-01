@@ -1,32 +1,62 @@
 <template>
   <div id="app">
-    <router-view/>
-    <button type="button" name="button" @click="start()">Start</button>
+    Your Name  <input type="text" name="" v-model="userName">
+    <button type="button" name="button" @click="start('room1')">Room1</button>
+    <button type="button" name="button" @click="start('room2')">Room2</button>
+    <button type="button" name="button" @click="start('room3')">Room3</button>
+
+    <input type="text" name="" v-model="myMessage">
+    <button type="button" name="button" @click="sendMessage()">send</button>
+    <br>
+    <div v-for="(chat, index) in allChat" :key="index">
+        {{chat}}
+    </div>
   </div>
 </template>
 
 <script>
 export default {
   name: 'App',
+  data () {
+    return {
+      userCount: 0,
+      userName: '',
+      selectRoom: null,
+      allChat: [],
+      myMessage: ''
+    }
+  },
   sockets: {
     connect () {
-      console.log('socket connected')
+
     },
-    getName (name) {
-      if (this.nameRival === '') {
-        var delay = setInterval(() => {
-          this.$socket.emit('setName', {name: 'aaaa'})
-          clearInterval(delay)
-        }, 1000)
-      }
-      this.nameRival = name.name
+    updatechat (data) {
+      console.log(userName)
+      console.log(data)
+      this.allChat.push(`${userName} : ${data}`)
     }
   },
   methods: {
-    start () {
-      let vm = this
-      vm.$socket.emit('start', {num: '555'})
+    start (room) {
+      if (!this.selectRoom) {
+        this.selectRoom = room
+        let data = {
+          userName: this.userName,
+          room: room
+        }
+        this.$socket.emit('connectFirstTime', data)
+      } else if (this.selectRoom && this.selectRoom !== room) {
+        this.selectRoom = room
+        this.$socket.emit('switchRoom', room)
+        this.allChat = []
+      }
+    },
+    sendMessage () {
+      this.$socket.emit('sendchat', this.myMessage)
+      this.myMessage = ''
     }
+  },
+  mounted () {
   }
 }
 </script>

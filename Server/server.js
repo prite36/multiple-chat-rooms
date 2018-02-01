@@ -11,15 +11,34 @@ app.use(function (req, res, next) {
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 app.use(express.static('dist'))
-io.on('connection', function (socket) {
-  socket.on('start', function (data) {
-    console.log(data)
+var usernames = {}
+io.sockets.on('connection', socket => {
+  socket.on('connectFirstTime', function (data) {
+    console.log(`User ${data.userName} Connection`)
+    socket.username = data.userName
+    socket.room = data.room
+    usernames[data.userName] = data.userName
+    socket.join(data.room)
+    socket.emit('updatechat', {userName: 'SERVER', data: `you have connected to ${data.room}`})
+    socket.broadcast.to(data.room).emit('updatechat', {userName: 'SERVER', data: `${data.userName} has connected to this room`})
   })
-  socket.on('setName', function (data) {
-    console.log(data)
-    socket.broadcast.to(data.room).emit('getName', {
-      name: data.name
-    })
+  socket.on('sendchat', function (data) {
+    io.sockets.in(socket.room).emit('updatechat', {userName: socket.username, data: data})
+  })
+  socket.on('switchRoom', function (newroom) {
+    console.log(newroom)
+    socket.leave(socket.room)
+    socket.join(newroom)
+    socket.emit('updatechat', {userName: 'SERVER', data: `you have connected to ${newroom}`})
+    socket.broadcast.to(socket.room).emit('updatechat', {userName: 'SERVER', data: `${socket.username} has left this room`})
+    socket.room = newroom
+    socket.broadcast.to(newroom).emit('updatechat', {userName: 'SERVER', data: `${socket.username} has joined this room`})
+  })
+  socket.on('disconnect', function () {
+    delete usernames[socket.username]
+    io.sockets.emit('updateusers', usernames)
+    socket.broadcast.emit('updatechat', {userName: 'SERVER', data: `${socket.username} has disconnected`})
+    socket.leave(socket.room)
   })
 })
 app.set('port', (process.env.PORT || 3000))
