@@ -57,8 +57,10 @@ export default {
       }
     },
     sendMessage () {
-      this.$socket.emit('sendchat', this.myMessage)
-      this.myMessage = ''
+      if (this.myMessage) {
+        this.$socket.emit('sendchat', this.myMessage)
+        this.myMessage = ''
+      }
     }
   },
   mounted () {
