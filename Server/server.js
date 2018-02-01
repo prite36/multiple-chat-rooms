@@ -38,7 +38,6 @@ io.sockets.on('connection', socket => {
     io.sockets.in(socket.room).emit('updatechat', {userName: socket.username, data: data})
   })
   socket.on('disconnect', () => {
-    console.log(socket.room)
     if (socket.room) countPeople[socket.room] --
     delete usernames[socket.username]
     io.sockets.emit('updateusers', countPeople)

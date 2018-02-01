@@ -34,7 +34,11 @@ export default {
     connect () {
 
     },
+    disconnect () {
+      console.log('server Down')
+    },
     updatechat (data) {
+      console.log(data.data)
       this.allChat.push(`${data.userName} : ${data.data}`)
     },
     updateusers (data) {
